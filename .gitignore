@@ -1,0 +1,17 @@
+
+*.mod
+*.smod
+
+# Compiled Stack libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+*.bin
+*.iso
