@@ -6,11 +6,27 @@ LDPARAMS = -melf_i386
 objects = obj/loader.o \
 		  obj/kernel.o \
 		  obj/gdt.o \
+		  obj/memorymanagement.o \
 		  obj/drivers/driver.o \
 		  obj/hardwarecommunication/port.o \
 		  obj/hardwarecommunication/interrupts.o \
+		  obj/hardwarecommunication/pci.o \
 		  obj/hardwarecommunication/interruptstubs.o \
+		  obj/syscalls.o \
+		  obj/multitasking.o \
+		  obj/net/etherframe.o \
+		  obj/net/arp.o \
+		  obj/net/ipv4.o \
+		  obj/net/icmp.o \
+		  obj/net/udp.o \
+		  obj/net/tcp.o \
+		  obj/drivers/amd_am79c973.o \
 		  obj/drivers/keyboard.o \
+		  obj/gui/widget.o \
+		  obj/gui/window.o \
+		  obj/gui/desktop.o \
+		  obj/drivers/vga.o \
+		  obj/drivers/ata.o\
 		  obj/drivers/mouse.o
 
 run: mykernel.iso

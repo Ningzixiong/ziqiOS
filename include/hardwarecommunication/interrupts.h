@@ -2,6 +2,7 @@
 #define __MYOS__HARDWARECOMMUNICATION__INTERRUPTMANAGER_H
 
 #include <common/types.h>
+#include <multitasking.h>
 #include <hardwarecommunication/port.h>
 #include <gdt.h>
 
@@ -27,6 +28,7 @@ namespace myos {
         protected:
             static InterruptManager* ActiveInterruptManager;
             InterruptHandler* handlers[256];
+            TaskManager* taskManager;
             
             struct GateDescriptor {
                 myos::common::uint16_t handlerAddressLowBits;
@@ -72,6 +74,8 @@ namespace myos {
             static void HandleInterruptRequest0x0E();
             static void HandleInterruptRequest0x0F();
             static void HandleInterruptRequest0x31();
+            
+            static void HandleInterruptRequest0x80();
 
             static void HandleException0x00();
             static void HandleException0x01();
@@ -104,7 +108,7 @@ namespace myos {
             Port8BitSlow picSlaveData;
 
         public:
-            InterruptManager(myos::common::uint16_t hardwareInterruptOffset, myos::GlobalDescriptorTable* gdt);
+            InterruptManager(myos::common::uint16_t hardwareInterruptOffset, myos::GlobalDescriptorTable* gdt, myos::TaskManager* taskManager);
             ~InterruptManager();
             myos::common::uint16_t HardwareInterruptOffset();
             void Activate();

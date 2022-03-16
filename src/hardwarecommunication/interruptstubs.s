@@ -6,6 +6,7 @@
 .global _ZN4myos21hardwarecommunication16InterruptManager26HandleInterruptRequest\num\()Ev
 _ZN4myos21hardwarecommunication16InterruptManager26HandleInterruptRequest\num\()Ev:
     movb $\num + IRQ_BASE, (interruptnumber)
+    pushl $0
     jmp int_bottom
 .endm
 
@@ -38,7 +39,6 @@ HandleException 0x10
 HandleException 0x11
 HandleException 0x12
 HandleException 0x13
-HandleException 0x31
 
 HandleInterruptRequest 0x00
 HandleInterruptRequest 0x01
@@ -58,24 +58,49 @@ HandleInterruptRequest 0x0E
 HandleInterruptRequest 0x0F
 HandleInterruptRequest 0x31
 
-int_bottom:
-    pusha
-    pushl %ds
-    pushl %es
-    pushl %fs
-    pushl %gs
+HandleInterruptRequest 0x80
 
+int_bottom:
+
+    # save registers
+    #pusha
+    #pushl %ds
+    #pushl %es
+    #pushl %fs
+    #pushl %gs
+
+    pushl %ebp
+    pushl %edi
+    pushl %esi
+
+    pushl %edx
+    pushl %ecx
+    pushl %ebx
+    pushl %eax
+
+    # call C++ Handler
     pushl %esp
     pushl (interruptnumber)
     call _ZN4myos21hardwarecommunication16InterruptManager15HandleInterruptEhj
     
-    movl %eax, %esp
+    movl %eax, %esp # switch the stack
 
-    popl %gs
-    popl %fs
-    popl %es
-    popl %ds
-    popa
+    # restore registers
+    popl %eax
+    popl %ebx
+    popl %ecx
+    popl %edx
+
+    popl %esi
+    popl %edi
+    popl %ebp
+    #popl %gs
+    #popl %fs
+    #popl %es
+    #popl %ds
+    #popa
+
+    add $4, %esp
 
 .global _ZN4myos21hardwarecommunication16InterruptManager15InterruptIgnoreEv
 _ZN4myos21hardwarecommunication16InterruptManager15InterruptIgnoreEv:

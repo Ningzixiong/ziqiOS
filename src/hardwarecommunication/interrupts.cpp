@@ -47,11 +47,12 @@ uint16_t InterruptManager::HardwareInterruptOffset()
     return hardwareInterruptOffset;
 }
 
-InterruptManager::InterruptManager(uint16_t hardwareInterruptOffset, GlobalDescriptorTable* gdt) 
+InterruptManager::InterruptManager(uint16_t hardwareInterruptOffset, GlobalDescriptorTable* gdt, TaskManager* taskManager)
     : picMasterCommand(0x20),
     picMasterData(0x21),
     picSlaveCommand(0xA0),
     picSlaveData(0xA1) {
+    this->taskManager = taskManager;
     this->hardwareInterruptOffset = hardwareInterruptOffset;
     uint32_t codeSegment = gdt->CodeSegmentSelector();
 
@@ -98,6 +99,8 @@ InterruptManager::InterruptManager(uint16_t hardwareInterruptOffset, GlobalDescr
     SetInterruptDescriptorTableEntry(hardwareInterruptOffset + 0x0D, codeSegment, &HandleInterruptRequest0x0D, 0, IDT_INTERRUPT_GATE);
     SetInterruptDescriptorTableEntry(hardwareInterruptOffset + 0x0E, codeSegment, &HandleInterruptRequest0x0E, 0, IDT_INTERRUPT_GATE);
     SetInterruptDescriptorTableEntry(hardwareInterruptOffset + 0x0F, codeSegment, &HandleInterruptRequest0x0F, 0, IDT_INTERRUPT_GATE);
+
+    SetInterruptDescriptorTableEntry(                          0x80, codeSegment, &HandleInterruptRequest0x80, 0, IDT_INTERRUPT_GATE);
     /*
     SetInterruptDescriptorTableEntry(hardwareInterruptOffset + 0x10, codeSegment, &HandleException0x10, 0, IDT_INTERRUPT_GATE);
     SetInterruptDescriptorTableEntry(hardwareInterruptOffset + 0x11, codeSegment, &HandleException0x11, 0, IDT_INTERRUPT_GATE);
@@ -154,7 +157,7 @@ uint32_t InterruptManager::HandleInterrupt(uint8_t interruptNumber, uint32_t esp
 uint32_t InterruptManager::DoHandleInterrupt(uint8_t interruptNumber, uint32_t esp) {
     if(handlers[interruptNumber] != 0) {
         esp = handlers[interruptNumber]->HandleInterrupt(esp);
-    } else if(interruptNumber != 0x20) {
+    } else if(interruptNumber != hardwareInterruptOffset) {
         printf("UNHANDLED INTERRUPT 0x");
         printfHex(interruptNumber);
         /*
@@ -166,9 +169,13 @@ uint32_t InterruptManager::DoHandleInterrupt(uint8_t interruptNumber, uint32_t e
         */
     }
     
-    if (0x20 <= interruptNumber && interruptNumber < 0x30) {
+    if(interruptNumber == hardwareInterruptOffset) {
+        esp = (uint32_t)taskManager->Schedule((CPUState*)esp);
+    }
+
+    if (hardwareInterruptOffset <= interruptNumber && interruptNumber < hardwareInterruptOffset + 16) {
         picMasterCommand.write(0x20);
-        if(0x28 <= interruptNumber) {
+        if(hardwareInterruptOffset + 8 <= interruptNumber) {
             picSlaveCommand.write(0x20);
         }
     }
